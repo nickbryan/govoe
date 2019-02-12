@@ -1,0 +1,12 @@
+github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 h1:baVdMKlASEHrj19iqjARrPbaRisD7EuZEVJj6ZMLl1Q=
+github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3/go.mod h1:VEPNJUlxl5KdWjDvz6Q1l+rJlxF2i6xqDeGuGAxa87M=
+github.com/go-gl/gl v0.0.0-20181026044259-55b76b7df9d2 h1:78Hza2KHn2PX1jdydQnffaU2A/xM0g3Nx1xmMdep9Gk=
+github.com/go-gl/gl v0.0.0-20181026044259-55b76b7df9d2/go.mod h1:482civXOzJJCPzJ4ZOX/pwvXBWSnzD4OKMdH4ClKGbk=
+github.com/go-gl/glfw v0.0.0-20181014061658-691ee1b84c51 h1:elGSwayRx7uAsfA5PnVKeTHh+AVsUTmas0CkHOw/DSk=
+github.com/go-gl/glfw v0.0.0-20181014061658-691ee1b84c51/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
+github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a h1:2n5w2v3knlspzjJWyQPC0j88Mwvq0SZV0Jdws34GJwc=
+github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a/go.mod h1:dvrdneKbyWbK2skTda0nM4B9zSlS2GZSnjX7itr/skQ=
+github.com/ojrac/opensimplex-go v1.0.1 h1:XslvpLP6XqQSATUtsOnGBYtFPw7FQ6h6y0ihjVeOLHo=
+github.com/ojrac/opensimplex-go v1.0.1/go.mod h1:MoSgj04tZpH8U0RefZabnHV2AbLgv/2mo3hLJtWqSEs=
+golang.org/x/image v0.0.0-20190118043309-183bebdce1b2 h1:FNSSV4jv1PrPsiM2iKGpqLPPgYACqh9Muav7Pollk1k=
+golang.org/x/image v0.0.0-20190118043309-183bebdce1b2/go.mod h1:ux5Hcp/YLpHSI86hEcLt0YII63i6oz57MZXIpbrjZUs=
