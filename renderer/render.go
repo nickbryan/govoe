@@ -62,7 +62,7 @@ func (r *Renderer) Setup() {
 	r.createShaders()
 
 	// Uncomment this call to draw in wireframe polygons.
-	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 }
 
 func (r *Renderer) Teardown() {

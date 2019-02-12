@@ -202,6 +202,11 @@ func (cm *ChunkManager) newChunk(x, y, z float64) *Chunk {
 	cm.chunks.Set(int(x), int(y), int(z), ch)
 
 	ch.Setup()
+
+	if y == 0 && x == 0 && z == 0 {
+		ch.PlaceTorch(0, 30, 0)
+	}
+
 	ch.BuildMesh()
 	ch.Mesh.Finish()
 

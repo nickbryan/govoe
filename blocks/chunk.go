@@ -34,6 +34,13 @@ func (c *Chunk) Setup() {
 		Blocks:   c.blocks,
 		LightMap: c.lightMap,
 		Offset:   c.Pos,
+
+		XMinus: c.XMinus,
+		XPlus:  c.XPlus,
+		YMinus: c.YMinus,
+		YPlus:  c.YPlus,
+		ZMinus: c.ZMinus,
+		ZPlus:  c.ZPlus,
 	}
 
 	n1 := noise.NewCombined(noise.NewOctave(8), noise.NewOctave(8))
@@ -69,6 +76,8 @@ func (c *Chunk) Setup() {
 				} else {
 					c.blocks.Set(int(x), int(y), int(z), Empty)
 				}
+
+				//c.lightMap.SetSunlight()
 			}
 		}
 	}
@@ -81,7 +90,7 @@ func (c *Chunk) TearDown() {
 func (c *Chunk) PlaceTorch(x, y, z int) {
 	lightBfsQueue := list.New()
 
-	c.lightMap.SetTorchlight(x, y, z, 15)
+	c.lightMap.SetTorchlight(x, y, z, 15) // TODO: 16?
 	lightBfsQueue.PushBack(&LightNode{Chunk: c, X: x, Y: y, Z: z})
 
 	for lightBfsQueue.Len() > 0 {

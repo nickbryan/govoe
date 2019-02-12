@@ -165,8 +165,7 @@ func (e *Engine) setup() {
 	})
 
 	e.chunkManager = blocks.NewChunkManager(e.renderer, e.player)
-	//e.chunk.PlaceTorch(16, 1, 16)
-	//e.chunk.PlaceTorch(16, 1, 2)
+
 }
 
 func (e *Engine) tearDown() {
