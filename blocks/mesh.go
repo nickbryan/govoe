@@ -7,103 +7,6 @@ import (
 	"github.com/go-gl/mathgl/mgl64"
 )
 
-type FaceSide = int
-
-const (
-	NorthFace FaceSide = iota
-	SoutFace
-	EastFace
-	WestFace
-	TopFace
-	BottomFace
-)
-
-type Face struct {
-	side FaceSide
-}
-
-type NaiveMesher struct {
-	Mesh   MeshRenderer
-	Blocks BlockContainer
-}
-
-func (nm *NaiveMesher) Update() {
-	for x := 0.0; x < ChunkSize; x += 1 {
-		for y := 0.0; y < ChunkSize; y += 1 {
-			for z := 0.0; z < ChunkSize; z += 1 {
-				if nm.Blocks.Lookup(int(x), int(y), int(z)) != Empty {
-					nm.createCube(x, y, z)
-				}
-			}
-		}
-	}
-}
-
-func (nm *NaiveMesher) createCube(x, y, z float64) {
-	p1 := mgl64.Vec3{x - 1, y - 1, z + 1}
-	p2 := mgl64.Vec3{x + 1, y - 1, z + 1}
-	p3 := mgl64.Vec3{x + 1, y + 1, z + 1}
-	p4 := mgl64.Vec3{x - 1, y + 1, z + 1}
-	p5 := mgl64.Vec3{x + 1, y - 1, z - 1}
-	p6 := mgl64.Vec3{x - 1, y - 1, z - 1}
-	p7 := mgl64.Vec3{x - 1, y + 1, z - 1}
-	p8 := mgl64.Vec3{x + 1, y + 1, z - 1}
-
-	// Front
-	v1 := nm.Mesh.AddVertex(p1)
-	v2 := nm.Mesh.AddVertex(p2)
-	v3 := nm.Mesh.AddVertex(p3)
-	v4 := nm.Mesh.AddVertex(p4)
-
-	nm.Mesh.AddTriangle(v1, v2, v3)
-	nm.Mesh.AddTriangle(v1, v3, v4)
-
-	// Back
-	v5 := nm.Mesh.AddVertex(p5)
-	v6 := nm.Mesh.AddVertex(p6)
-	v7 := nm.Mesh.AddVertex(p7)
-	v8 := nm.Mesh.AddVertex(p8)
-
-	nm.Mesh.AddTriangle(v5, v6, v7)
-	nm.Mesh.AddTriangle(v5, v7, v8)
-
-	// Right
-	v2 = nm.Mesh.AddVertex(p2)
-	v5 = nm.Mesh.AddVertex(p5)
-	v8 = nm.Mesh.AddVertex(p8)
-	v3 = nm.Mesh.AddVertex(p3)
-
-	nm.Mesh.AddTriangle(v2, v5, v8)
-	nm.Mesh.AddTriangle(v2, v8, v3)
-
-	// Left
-	v6 = nm.Mesh.AddVertex(p6)
-	v1 = nm.Mesh.AddVertex(p1)
-	v4 = nm.Mesh.AddVertex(p4)
-	v7 = nm.Mesh.AddVertex(p7)
-
-	nm.Mesh.AddTriangle(v6, v1, v4)
-	nm.Mesh.AddTriangle(v6, v4, v7)
-
-	// Top
-	v4 = nm.Mesh.AddVertex(p4)
-	v3 = nm.Mesh.AddVertex(p3)
-	v8 = nm.Mesh.AddVertex(p8)
-	v7 = nm.Mesh.AddVertex(p7)
-
-	nm.Mesh.AddTriangle(v4, v3, v8)
-	nm.Mesh.AddTriangle(v4, v8, v7)
-
-	// Bottom
-	v6 = nm.Mesh.AddVertex(p6)
-	v5 = nm.Mesh.AddVertex(p5)
-	v2 = nm.Mesh.AddVertex(p2)
-	v1 = nm.Mesh.AddVertex(p1)
-
-	nm.Mesh.AddTriangle(v6, v5, v2)
-	nm.Mesh.AddTriangle(v6, v2, v1)
-}
-
 type CulledMesher struct {
 	Mesh     MeshRenderer
 	Blocks   BlockContainer
@@ -121,8 +24,6 @@ func (cm *CulledMesher) GetBlockColor(x, y, z int, bt BlockType) mgl64.Vec3 {
 	tl := 15.0
 	if x >= 0 && y >= 0 && z >= 0 && x < ChunkSize && y < ChunkSize && z < ChunkSize {
 		tl = math.Max(float64(cm.LightMap.Torchlight(x, y, z)), float64(cm.LightMap.Sunlight(x, y, z)))
-	} else {
-		fmt.Println(x, y, z)
 	}
 
 	lightColor := math.Pow(tl/16.0, 1.4) + base
@@ -170,6 +71,7 @@ func (cm *CulledMesher) createCube(x, y, z float64, bt BlockType) {
 		}
 
 		if addSide {
+			// TODO: do we need to add or subtract 1 here? is this whats skewing stuff?
 			cm.Mesh.SetColor(cm.GetBlockColor(int(x), int(y), int(z)+1, bt))
 
 			v1 = cm.Mesh.AddVertex(p1)
@@ -188,6 +90,9 @@ func (cm *CulledMesher) createCube(x, y, z float64, bt BlockType) {
 
 		if z == 0 {
 			addSide = cm.ZMinus != nil && cm.ZMinus.blocks.Lookup(int(x), int(y), ChunkSize-1) == Empty
+			if addSide {
+				fmt.Println(addSide)
+			}
 		}
 
 		if addSide {
@@ -209,6 +114,12 @@ func (cm *CulledMesher) createCube(x, y, z float64, bt BlockType) {
 
 		if x == ChunkSize-1 {
 			addSide = cm.XPlus != nil && cm.XPlus.blocks.Lookup(0, int(y), int(z)) == Empty
+			if addSide {
+				fmt.Println(addSide)
+				if addSide {
+					fmt.Println(addSide)
+				}
+			}
 		}
 
 		if addSide {
@@ -230,6 +141,9 @@ func (cm *CulledMesher) createCube(x, y, z float64, bt BlockType) {
 
 		if x == 0 {
 			addSide = cm.XMinus != nil && cm.XMinus.blocks.Lookup(ChunkSize-1, int(y), int(z)) == Empty
+			if addSide {
+				fmt.Println(addSide)
+			}
 		}
 
 		if addSide {
@@ -251,6 +165,9 @@ func (cm *CulledMesher) createCube(x, y, z float64, bt BlockType) {
 
 		if y == ChunkSize-1 {
 			addSide = cm.YPlus != nil && cm.YPlus.blocks.Lookup(int(x), 0, int(z)) == Empty
+			if addSide {
+				fmt.Println(addSide)
+			}
 		}
 
 		if addSide {
@@ -272,6 +189,9 @@ func (cm *CulledMesher) createCube(x, y, z float64, bt BlockType) {
 
 		if y == 0 {
 			addSide = cm.YMinus != nil && cm.YMinus.blocks.Lookup(int(x), ChunkSize-1, int(z)) == Empty
+			if addSide {
+				fmt.Println(addSide)
+			}
 		}
 
 		if addSide {

@@ -143,21 +143,27 @@ func (e *Engine) setup() {
 		e.inputManager.Register()
 		e.inputManager.AddKeyCommands(glfw.KeyW, input.Pressed, input.KeyCommandFunc(func() {
 			e.player.Stride(0.05)
+			fmt.Println(e.player.Pos())
 		}))
 		e.inputManager.AddKeyCommands(glfw.KeyS, input.Pressed, input.KeyCommandFunc(func() {
 			e.player.Stride(-0.05)
+			fmt.Println(e.player.Pos())
 		}))
 		e.inputManager.AddKeyCommands(glfw.KeyA, input.Pressed, input.KeyCommandFunc(func() {
 			e.player.Strafe(-0.05)
+			fmt.Println(e.player.Pos())
 		}))
 		e.inputManager.AddKeyCommands(glfw.KeyD, input.Pressed, input.KeyCommandFunc(func() {
 			e.player.Strafe(0.05)
+			fmt.Println(e.player.Pos())
 		}))
 		e.inputManager.AddKeyCommands(glfw.KeyQ, input.Pressed, input.KeyCommandFunc(func() {
 			e.player.Climb(0.05)
+			fmt.Println(e.player.Pos())
 		}))
 		e.inputManager.AddKeyCommands(glfw.KeyE, input.Pressed, input.KeyCommandFunc(func() {
 			e.player.Climb(-0.05)
+			fmt.Println(e.player.Pos())
 		}))
 		e.inputManager.AddMouseMoveCommands(input.MouseMoveCommandFunc(func(offsetX, offsetY float64) {
 			e.player.Look(float32(offsetX), float32(offsetY))

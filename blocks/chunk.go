@@ -66,7 +66,7 @@ func (c *Chunk) Setup() {
 				height *= 0.8
 			}
 
-			adjHeight := height + 32
+			adjHeight := height // + water level
 			// TODO: cap this somehow
 
 			for y := 0.0; y < ChunkSize; y++ {

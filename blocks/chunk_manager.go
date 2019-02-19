@@ -77,6 +77,10 @@ func (cm *ChunkManager) watchChunkLists() {
 					nch.XMinus = ch
 					ch.NumNeighbours += 1
 					nch.NumNeighbours += 1
+					// TODO: When we update the neighbours we need to update the meshes.
+					// TODO: We will need to clear the current mesh (possibly call teadown but i dont know what happens when deleting from the card)
+					// TODO: Then we will need to gen a FRESH mesh
+					// TODO: We can possible swap the current mesh to a cached mesh then create a new mesh then delete the old mesh and swap if we get artifacts in rendering
 				}
 			}
 
@@ -202,11 +206,6 @@ func (cm *ChunkManager) newChunk(x, y, z float64) *Chunk {
 	cm.chunks.Set(int(x), int(y), int(z), ch)
 
 	ch.Setup()
-
-	if y == 0 && x == 0 && z == 0 {
-		ch.PlaceTorch(0, 30, 0)
-	}
-
 	ch.BuildMesh()
 	ch.Mesh.Finish()
 
