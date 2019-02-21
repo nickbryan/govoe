@@ -1,10 +1,8 @@
-package main
+package old
 
 import (
 	"log"
 	"net/http"
-
-	"github.com/nickbryan/voxel/engine"
 
 	_ "net/http/pprof"
 

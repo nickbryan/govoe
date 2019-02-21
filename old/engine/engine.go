@@ -5,13 +5,11 @@ import (
 	"log"
 	"sync"
 
-	"github.com/nickbryan/voxel/entity"
+	"github.com/nickbryan/voxel/old/entity"
 
-	"github.com/nickbryan/voxel/blocks"
+	"github.com/nickbryan/voxel/old/input"
 
-	"github.com/nickbryan/voxel/input"
-
-	"github.com/nickbryan/voxel/renderer"
+	"github.com/nickbryan/voxel/old/renderer"
 
 	"github.com/faiface/mainthread"
 	"github.com/go-gl/gl/v4.1-core/gl"
