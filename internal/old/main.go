@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/nickbryan/voxel/internal/old/engine"
+
 	_ "net/http/pprof"
 
 	"github.com/faiface/mainthread"

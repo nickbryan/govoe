@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-gl/mathgl/mgl64"
 
-	"github.com/nickbryan/voxel/old/entity"
-	"github.com/nickbryan/voxel/old/renderer"
+	"github.com/nickbryan/voxel/internal/oldernal/old/entity"
+	"github.com/nickbryan/voxel/internal/oldernal/old/renderer"
 )
 
 type ChunkManager struct {

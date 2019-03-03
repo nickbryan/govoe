@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"math"
 
-	"github.com/nickbryan/voxel/old/noise"
+	"github.com/nickbryan/voxel/internal/oldernal/old/noise"
 
 	"github.com/go-gl/mathgl/mgl64"
 )
