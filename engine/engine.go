@@ -45,7 +45,8 @@ func New(c *Configuration) (*Engine, error) {
 	}
 
 	e := &Engine{
-		winMgr: c.WindowManager,
+		winMgr:   c.WindowManager,
+		eventMgr: c.EventManager,
 	}
 	engine = e
 
