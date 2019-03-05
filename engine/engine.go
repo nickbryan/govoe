@@ -13,6 +13,7 @@ type Configuration struct {
 	Fps           int           // Fps is the desired frames per second. // TODO: is this needed and should it be merged with UPS? or do we just need Ups?
 	Ups           int           // Ups is the desired updates per second.
 	WindowManager WindowManager // WindowManager will be used to create the Window instance.
+	EventManager  EventManager  // EventManager will be used by the engine to communicate between systems.
 }
 
 // engine allows us to ensure that Engine will only created once.
@@ -22,10 +23,11 @@ var engine *Engine
 
 // Engine is the main application instance. It will be create only once per application and is enforced as a singleton.
 type Engine struct {
-	running bool
-	closed  bool
-	winMgr  WindowManager
-	win     Window
+	running  bool
+	closed   bool
+	winMgr   WindowManager
+	win      Window
+	eventMgr EventManager
 }
 
 // New will create, configure and return a new Engine instance. It can only be called once per application.
@@ -36,6 +38,10 @@ func New(c *Configuration) (*Engine, error) {
 
 	if c.WindowManager == nil {
 		c.WindowManager = &GLFWWindowManager{}
+	}
+
+	if c.EventManager == nil {
+		c.EventManager = NewEventDispatcher(0)
 	}
 
 	e := &Engine{
