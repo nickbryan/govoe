@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
+	"github.com/nickbryan/voxel/input"
 
 	"github.com/faiface/mainthread"
 	"github.com/nickbryan/voxel/engine"
@@ -34,6 +37,21 @@ func main() {
 		if err != nil {
 			log.Fatalln("failed to create engine")
 		}
+
+		inputMgr := input.New(e.World.EventManager)
+		inputMgr.AddKeyCommands(input.KeyW, input.Press, input.KeyCommandExecutorFunc(func() {
+			fmt.Println("W Press")
+		}))
+
+		inputMgr.AddKeyCommands(input.KeyW, input.Release, input.KeyCommandExecutorFunc(func() {
+			fmt.Println("W Release")
+		}))
+
+		inputMgr.AddKeyCommands(input.KeyS, input.Pressed, input.KeyCommandExecutorFunc(func() {
+			fmt.Println(".")
+		}))
+
+		e.World.AddSimulator(inputMgr)
 
 		e.Run()
 	})

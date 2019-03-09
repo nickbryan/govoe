@@ -1,19 +1,30 @@
 // Package engine is the heart of the system and is responsible for initialisation and orchestration of
-// all sub-systems and managers.
+// all sub-system and managers.
 package engine
 
 import (
 	"errors"
+
+	"github.com/nickbryan/voxel/event"
 )
 
-// Configuration should be passed into engine.New(c *Configuration) and will be used to initialise the engine instance.
+// EventManager is a basic channel based publish/subscribe event system. It is used
+// for communication between system within the engine.
+type EventManager interface {
+	event.Publisher
+	event.Subscriber
+	event.Unsubscriber
+	Teardown()
+}
+
+// Configuration should be passed into engine.NewManager(c *Configuration) and will be used to initialise the engine instance.
 type Configuration struct {
 	Title         string        // Title is the window title.
 	Width, Height int           // Width and Height will determine the initial dimensions of the window when not in fullscreen mode.
 	Fps           int           // Fps is the desired frames per second. // TODO: is this needed and should it be merged with UPS? or do we just need Ups?
 	Ups           int           // Ups is the desired updates per second.
 	WindowManager WindowManager // WindowManager will be used to create the Window instance.
-	EventManager  EventManager  // EventManager will be used by the engine to communicate between systems.
+	EventManager  EventManager  // EventManager will be used by the engine to communicate between system.
 }
 
 // engine allows us to ensure that Engine will only created once.
@@ -23,6 +34,8 @@ var engine *Engine
 
 // Engine is the main application instance. It will be create only once per application and is enforced as a singleton.
 type Engine struct {
+	World *World
+
 	running  bool
 	closed   bool
 	winMgr   WindowManager
@@ -30,18 +43,20 @@ type Engine struct {
 	eventMgr EventManager
 }
 
-// New will create, configure and return a new Engine instance. It can only be called once per application.
+// NewManager will create, configure and return a new Engine instance. It can only be called once per application.
 func New(c *Configuration) (*Engine, error) {
 	if engine != nil {
 		return nil, errors.New("an instance of Engine has already been created")
 	}
 
-	if c.WindowManager == nil {
-		c.WindowManager = &GLFWWindowManager{}
+	if c.EventManager == nil {
+		c.EventManager = event.NewManager(0)
 	}
 
-	if c.EventManager == nil {
-		c.EventManager = NewEventDispatcher(0)
+	if c.WindowManager == nil {
+		c.WindowManager = &GLFWWindowManager{
+			publisher: c.EventManager,
+		}
 	}
 
 	e := &Engine{
@@ -61,6 +76,8 @@ func New(c *Configuration) (*Engine, error) {
 	}
 	e.win = win
 
+	e.World = NewWorld(e.eventMgr)
+
 	return e, nil
 }
 
@@ -75,8 +92,10 @@ func (e *Engine) Run() {
 	defer e.teardown()
 
 	for !e.closed {
-		e.winMgr.PollEvents()
+		e.World.RunSimulations(0)
+
 		e.win.SwapBuffers()
+		e.winMgr.PollEvents()
 		e.closed = e.win.ShouldClose()
 	}
 

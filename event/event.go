@@ -1,4 +1,4 @@
-package engine
+package event
 
 type action int
 
@@ -9,14 +9,17 @@ const (
 	teardown
 )
 
+// Topic //TODO
+type Topic string
+
 // Publisher is the interface that wraps the Publish method.
 //
 // Publish sends the specified message to all channels subscribed to the specified topics.
 type Publisher interface {
-	Publish(msg interface{}, topics ...string)
+	Publish(msg interface{}, topics ...Topic)
 }
 
-// Subscriber is the interface that wraps the Publish method.
+// Subscriber is the interface that wraps the Subscribe method.
 //
 // Subscribe returns a channel that all messages relating to the passed in topics will
 // be sent on.
@@ -25,48 +28,39 @@ type Publisher interface {
 // than one of the subscribed topics then the channel will receive the same message
 // multiple times.
 type Subscriber interface {
-	Subscribe(topics ...string) chan interface{}
+	Subscribe(topics ...Topic) chan interface{}
 }
 
-// Unsubscriber is the interface that wraps the Publish method.
+// Unsubscriber is the interface that wraps the Unsubscribe method.
 //
 // Unsubscribe will stop the specified channel from receiving any more messages on the
 // specified topics. If there are no more topic subscriptions then the channel will be closed.
 type Unsubscriber interface {
-	Unsubscribe(ch chan interface{}, topics ...string)
-}
-
-// EventManager is a basic channel based publish/subscribe event system. It is used
-// for communication between systems within the engine.
-type EventManager interface {
-	Publisher
-	Subscriber
-	Unsubscriber
-	Teardown()
+	Unsubscribe(ch chan interface{}, topics ...Topic)
 }
 
 // command represents a single action and is used by the commandQueue to ensure actions
 // get processed in the order they are sent.
 type command struct {
-	topics  []string
+	topics  []Topic
 	ch      chan interface{}
 	action  action
 	message interface{}
 }
 
-// EventDispatcher is a publish/subscribe based EventManager that is safe for concurrent use.
-type EventDispatcher struct {
-	subscriptions map[string]map[chan interface{}]struct{}
-	channels      map[chan interface{}]map[string]struct{}
+// Manager is a publish/subscribe based event manager that is safe for concurrent use.
+type Manager struct {
+	subscriptions map[Topic]map[chan interface{}]struct{}
+	channels      map[chan interface{}]map[Topic]struct{}
 	commandQueue  chan command
 	bufferSize    int
 }
 
-// NewEventDispatcher creates, initialises and starts a new EventDispatcher.
-func NewEventDispatcher(bufferSize int) *EventDispatcher {
-	ed := &EventDispatcher{
-		subscriptions: make(map[string]map[chan interface{}]struct{}),
-		channels:      make(map[chan interface{}]map[string]struct{}),
+// NewManager creates, initialises and starts a new Manager.
+func NewManager(bufferSize int) *Manager {
+	ed := &Manager{
+		subscriptions: make(map[Topic]map[chan interface{}]struct{}),
+		channels:      make(map[chan interface{}]map[Topic]struct{}),
 		commandQueue:  make(chan command),
 		bufferSize:    bufferSize,
 	}
@@ -77,7 +71,7 @@ func NewEventDispatcher(bufferSize int) *EventDispatcher {
 }
 
 // Publish sends the specified message to all channels subscribed to the specified topics.
-func (ed *EventDispatcher) Publish(msg interface{}, topics ...string) {
+func (ed *Manager) Publish(msg interface{}, topics ...Topic) {
 	ed.commandQueue <- command{
 		topics:  topics,
 		action:  publish,
@@ -91,7 +85,7 @@ func (ed *EventDispatcher) Publish(msg interface{}, topics ...string) {
 // If the channel is subscribed to multiple topics and a message is published on more
 // than one of the subscribed topics then the channel will receive the same message
 // multiple times.
-func (ed *EventDispatcher) Subscribe(topics ...string) chan interface{} {
+func (ed *Manager) Subscribe(topics ...Topic) chan interface{} {
 	ch := make(chan interface{}, ed.bufferSize)
 
 	ed.commandQueue <- command{
@@ -105,7 +99,7 @@ func (ed *EventDispatcher) Subscribe(topics ...string) chan interface{} {
 
 // Unsubscribe will stop the specified channel from receiving any more messages on the
 // specified topics. If there are no more topic subscriptions then the channel will be closed.
-func (ed *EventDispatcher) Unsubscribe(ch chan interface{}, topics ...string) {
+func (ed *Manager) Unsubscribe(ch chan interface{}, topics ...Topic) {
 	ed.commandQueue <- command{
 		topics: topics,
 		ch:     ch,
@@ -114,7 +108,7 @@ func (ed *EventDispatcher) Unsubscribe(ch chan interface{}, topics ...string) {
 }
 
 // Teardown exits the command processing loop and closes all remaining channels.
-func (ed *EventDispatcher) Teardown() {
+func (ed *Manager) Teardown() {
 	ed.commandQueue <- command{
 		action: teardown,
 	}
@@ -122,7 +116,7 @@ func (ed *EventDispatcher) Teardown() {
 
 // processCommands is responsible for keeping all dispatcher actions in sync. The running
 // goroutine and all channels will be closed when the Teardown method is called.
-func (ed *EventDispatcher) processCommands() {
+func (ed *Manager) processCommands() {
 loop:
 	for cmd := range ed.commandQueue {
 		switch cmd.action {
@@ -133,7 +127,7 @@ loop:
 				}
 
 				if ed.channels[cmd.ch] == nil {
-					ed.channels[cmd.ch] = make(map[string]struct{})
+					ed.channels[cmd.ch] = make(map[Topic]struct{})
 				}
 
 				ed.subscriptions[topic][cmd.ch] = struct{}{}

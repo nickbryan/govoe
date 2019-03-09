@@ -3,6 +3,10 @@ package engine
 import (
 	"runtime"
 
+	"github.com/nickbryan/voxel/event"
+
+	"github.com/nickbryan/voxel/input"
+
 	"github.com/go-gl/gl/v4.1-core/gl"
 
 	"github.com/faiface/mainthread"
@@ -51,7 +55,9 @@ type WindowManager interface {
 }
 
 // GLFWWindowManager wraps the shared GLFWWindow functionality.
+// TODO: should this be private?
 type GLFWWindowManager struct {
+	publisher event.Publisher
 }
 
 // Initialise initialises GLFW and sets appropriate window hints.
@@ -107,6 +113,30 @@ func (wm *GLFWWindowManager) CreateWindow(width, height int, title string) (*GLF
 		win.win.SetFramebufferSizeCallback(func(win *glfw.Window, width int, height int) {
 			// TODO: move this to event to remove dependency
 			gl.Viewport(0, 0, int32(width), int32(height))
+		})
+
+		win.win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, mod glfw.ModifierKey) {
+			if action == glfw.Press {
+				wm.publisher.Publish(
+					input.KeyEvent{
+						Action:   input.KeyPressed,
+						Key:      input.Key(key),
+						Modifier: input.ModifierKey(mod),
+					},
+					input.KeyPressedEvent,
+				)
+			}
+
+			if action == glfw.Release {
+				wm.publisher.Publish(
+					input.KeyEvent{
+						Action:   input.KeyReleased,
+						Key:      input.Key(key),
+						Modifier: input.ModifierKey(mod),
+					},
+					input.KeyReleasedEvent,
+				)
+			}
 		})
 
 	})
