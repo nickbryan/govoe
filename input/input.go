@@ -58,7 +58,7 @@ func (m *Manager) AddKeyCommands(key Key, state State, commands ...KeyCommandExe
 	})
 }
 
-func (m *Manager) Simulate(_ float64) {
+func (m *Manager) Simulate(dt float64) {
 	for _, l := range m.keyPressListeners {
 		if m.keys[l.key] == off {
 			continue
@@ -66,13 +66,13 @@ func (m *Manager) Simulate(_ float64) {
 
 		if l.state == Pressed && m.keys[l.key] == press {
 			for _, c := range l.commands {
-				c.Execute()
+				c.Execute(dt)
 			}
 		}
 
 		if l.state == Press && m.keys[l.key] == press {
 			for _, c := range l.commands {
-				c.Execute()
+				c.Execute(dt)
 			}
 
 			m.keys[l.key] = off
@@ -80,7 +80,7 @@ func (m *Manager) Simulate(_ float64) {
 
 		if l.state == Release && m.keys[l.key] == release {
 			for _, c := range l.commands {
-				c.Execute()
+				c.Execute(dt)
 			}
 
 			m.keys[l.key] = off
