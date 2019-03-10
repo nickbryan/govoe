@@ -9,7 +9,8 @@ const (
 	teardown
 )
 
-// Topic //TODO
+// Topic should be a unique name that is used to reference a set of events
+// published on a given channel.
 type Topic string
 
 // Publisher is the interface that wraps the Publish method.
