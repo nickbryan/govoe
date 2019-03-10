@@ -40,19 +40,21 @@ func (sm *fixedStepSimulation) Step(e *Engine) {
 
 	for sm.accumulator >= sm.dt {
 		e.winMgr.PollEvents()
-		e.World.RunSimulations(sm.dt)
+
+		e.World.Simulate(sm.dt)
 
 		sm.accumulator -= sm.dt
 		sm.updates++
 	}
 
-	//alpha := sm.accumulator / sm.dt
+	alpha := sm.accumulator / sm.dt
 
-	//e.render(alpha)
+	e.World.Render(alpha)
 
 	e.win.SwapBuffers()
 
 	if currentTime-sm.previousTime >= 1 {
+		// TODO: event
 		fmt.Printf("fps: %d ups: %d \n", sm.frames, sm.updates)
 
 		sm.updates = 0
