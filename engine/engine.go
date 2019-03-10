@@ -4,6 +4,7 @@ package engine
 
 import (
 	"errors"
+	"time"
 
 	"github.com/nickbryan/voxel/event"
 )
@@ -40,12 +41,13 @@ type EventManager interface {
 
 // Configuration should be passed into engine.NewManager(c *Configuration) and will be used to initialise the engine instance.
 type Configuration struct {
-	Title         string        // Title is the window title.
-	Width, Height int           // Width and Height will determine the initial dimensions of the window when not in fullscreen mode.
-	Fps           int           // Fps is the desired frames per second. // TODO: is this needed and should it be merged with UPS? or do we just need Ups?
-	Ups           int           // Ups is the desired updates per second.
-	WindowManager WindowManager // WindowManager will be used to create the Window instance.
-	EventManager  EventManager  // EventManager will be used by the engine to communicate between system.
+	Title             string            // Title is the window title.
+	Width, Height     int               // Width and Height will determine the initial dimensions of the window when not in fullscreen mode.
+	Fps               int               // Fps is the desired frames per second. // TODO: is this needed and should it be merged with UPS? or do we just need Ups?
+	Ups               int               // Ups is the desired updates per second.
+	WindowManager     WindowManager     // WindowManager will be used to create the Window instance.
+	EventManager      EventManager      // EventManager will be used by the engine to communicate between system.
+	SimulationStepper SimulationStepper // SimulationStepper will be in charge of handling each step of the game simulation.
 }
 
 // engine allows us to ensure that Engine will only created once.
@@ -57,17 +59,23 @@ var engine *Engine
 type Engine struct {
 	World *World
 
+	started  time.Time
 	running  bool
 	closed   bool
 	winMgr   WindowManager
 	win      Window
 	eventMgr EventManager
+	simMgr   SimulationStepper
 }
 
 // NewManager will create, configure and return a new Engine instance. It can only be called once per application.
 func New(c *Configuration) (*Engine, error) {
 	if engine != nil {
 		return nil, errors.New("an instance of Engine has already been created")
+	}
+
+	if c.SimulationStepper == nil {
+		c.SimulationStepper = &fixedStepSimulation{}
 	}
 
 	if c.EventManager == nil {
@@ -81,8 +89,10 @@ func New(c *Configuration) (*Engine, error) {
 	}
 
 	e := &Engine{
+		started:  time.Now(),
 		winMgr:   c.WindowManager,
 		eventMgr: c.EventManager,
+		simMgr:   c.SimulationStepper,
 	}
 	engine = e
 
@@ -113,13 +123,14 @@ func (e *Engine) Run() {
 	defer e.teardown()
 
 	for !e.closed {
-		e.World.RunSimulations(0)
-
-		e.win.SwapBuffers()
-		e.winMgr.PollEvents()
+		e.simMgr.Step(e)
 		e.closed = e.win.ShouldClose()
 	}
 
+}
+
+func (e *Engine) GetTime() float64 {
+	return time.Since(e.started).Seconds()
 }
 
 // teardown will be called when the main loop has finished. Any state destructuring should be triggered from here.
