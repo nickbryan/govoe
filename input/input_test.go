@@ -8,17 +8,18 @@ import (
 )
 
 type subscriber struct {
-	ch chan interface{}
+	cb event.Callback
 }
 
-func (s *subscriber) Subscribe(...event.Topic) chan interface{} {
-	return s.ch
+func (s *subscriber) Subscribe(cb event.Callback, topics ...event.Topic) int {
+	s.cb = cb
+	return 1
 }
 
 func TestSimulate(t *testing.T) {
 	var msgs []string
 
-	s := &subscriber{ch: make(chan interface{}, 2)}
+	s := &subscriber{}
 	i := New(s)
 
 	i.AddKeyCommands(KeyA, Press, KeyCommandExecutorFunc(func(dt float64) {
@@ -32,35 +33,29 @@ func TestSimulate(t *testing.T) {
 		msgs = append(msgs, fmt.Sprintf("KeyB Pressed %v", dt))
 	}))
 
-	s.ch <- KeyEvent{
+	s.cb(KeyPressedEvent, KeyEvent{
 		Action: KeyPressed,
 		Key:    KeyA,
-	}
-	// Could take multiple simulations for event to be processed.
-	for len(msgs) < 1 {
-		i.Simulate(1)
-	}
+	})
+
+	i.Simulate(1)
 	if msgs[0] != "KeyA Press 1" {
 		t.Errorf("Simulation1 expected message to be: KeyA Press 1, received: %v", msgs[0])
 	}
 
-	s.ch <- KeyEvent{
+	s.cb(KeyReleasedEvent, KeyEvent{
 		Action: KeyReleased,
 		Key:    KeyA,
-	}
-	// Could take multiple simulations for event to be processed.
-	for len(msgs) < 2 {
-		i.Simulate(1)
-	}
+	})
+	i.Simulate(1)
 	if msgs[1] != "KeyA Release 1" {
 		t.Errorf("Simulation2 expected message to be: KeyA Release 1, received: %v", msgs[1])
 	}
 
-	s.ch <- KeyEvent{
+	s.cb(KeyPressedEvent, KeyEvent{
 		Action: KeyPressed,
 		Key:    KeyB,
-	}
-	// Could take multiple simulations for event to be processed.
+	})
 	for len(msgs) < 4 {
 		i.Simulate(1)
 	}
@@ -70,11 +65,12 @@ func TestSimulate(t *testing.T) {
 	if msgs[3] != "KeyB Pressed 1" {
 		t.Errorf("Simulation4 expected message to be:KeyB Pressed 1, received: %v", msgs[3])
 	}
-	s.ch <- KeyEvent{
+
+	s.cb(KeyReleasedEvent, KeyEvent{
 		Action: KeyReleased,
 		Key:    KeyB,
-	}
-	if msgs[len(msgs)-1] != "KeyB Pressed 1" {
-		t.Errorf("Simulation5 expected message to be:KeyB Pressed 1, received: %v", msgs[3])
+	})
+	if len(msgs) > 4 {
+		t.Errorf("Did not expect any more messages after release event: received: %v", len(msgs))
 	}
 }

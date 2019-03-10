@@ -8,13 +8,34 @@ import (
 	"github.com/nickbryan/voxel/event"
 )
 
+// Publisher is the interface that wraps the Publish method.
+//
+// Publish sends the specified message to the callbacks subscribed to the specified topics.
+type Publisher interface {
+	Publish(msg interface{}, topics ...event.Topic)
+}
+
+// Subscriber is the interface that wraps the Subscribe method.
+//
+// Subscribe subscribed the specified callback to the specified topics.
+type Subscriber interface {
+	Subscribe(cb event.Callback, topics ...event.Topic) int
+}
+
+// Unsubscriber is the interface that wraps the Unsubscribe method.
+//
+// Unsubscribe will prevent any further messages from being received on the specified topics for all
+// callbacks with the specified id
+type Unsubscriber interface {
+	Unsubscribe(id int, topics ...event.Topic)
+}
+
 // EventManager is a basic channel based publish/subscribe event system. It is used
 // for communication between system within the engine.
 type EventManager interface {
-	event.Publisher
-	event.Subscriber
-	event.Unsubscriber
-	Teardown()
+	Publisher
+	Subscriber
+	Unsubscriber
 }
 
 // Configuration should be passed into engine.NewManager(c *Configuration) and will be used to initialise the engine instance.
@@ -50,7 +71,7 @@ func New(c *Configuration) (*Engine, error) {
 	}
 
 	if c.EventManager == nil {
-		c.EventManager = event.NewManager(0)
+		c.EventManager = event.NewManager()
 	}
 
 	if c.WindowManager == nil {

@@ -1,10 +1,6 @@
 package input
 
-import (
-	"sync"
-
-	"github.com/nickbryan/voxel/event"
-)
+import "github.com/nickbryan/voxel/event"
 
 type keyState int
 
@@ -16,21 +12,19 @@ const (
 
 // Manager is responsible for executing all input commands registered within the system.
 //
-// Manager will subscribe to the KeyPressedEvent and KeyReleasedEvent topics of the supplied event.Subscriber
+// Manager will subscribe to the KeyPressedEvent and KeyReleasedEvent topics of the supplied event.AsyncSubscriber
 // upon initialisation. When the Manager is notified of a KeyEvent it will call the KeyCommandExecutor registered
 // with the specified key and action.
 //
 // All KeyCommandExecutor's are called within the Simulate method to ensure that they only get called once per simulation.
 type Manager struct {
 	initialised       bool
-	keyEvents         chan interface{}
 	keys              map[Key]keyState
-	keysMux           sync.RWMutex
 	keyPressListeners []keyPressListener
 }
 
 // New will create and Initialise a new Manager.
-func New(subscriber event.Subscriber) *Manager {
+func New(subscriber Subscriber) *Manager {
 	m := &Manager{
 		keys: make(map[Key]keyState),
 	}
@@ -41,15 +35,13 @@ func New(subscriber event.Subscriber) *Manager {
 }
 
 // Initialise can only be called once per manager. It will subscribe and listen to the KeyPressedEvent and
-// KeyReleasedEvent topics on the given event.Subscriber.
-func (m *Manager) Initialise(subscriber event.Subscriber) {
+// KeyReleasedEvent topics on the given Subscriber.
+func (m *Manager) Initialise(subscriber Subscriber) {
 	if m.initialised {
 		return
 	}
 
-	m.keyEvents = subscriber.Subscribe(KeyPressedEvent, KeyReleasedEvent)
-
-	go m.listen()
+	subscriber.Subscribe(m.keyCallback, KeyPressedEvent, KeyReleasedEvent)
 
 	m.initialised = true
 }
@@ -64,9 +56,7 @@ func (m *Manager) AddKeyCommands(key Key, state State, commands ...KeyCommandExe
 		}
 	}
 
-	m.keysMux.Lock()
 	m.keys[key] = off
-	m.keysMux.Unlock()
 
 	m.keyPressListeners = append(m.keyPressListeners, keyPressListener{
 		key:      key,
@@ -80,9 +70,7 @@ func (m *Manager) AddKeyCommands(key Key, state State, commands ...KeyCommandExe
 // The supplied dt (delta time) will be passed into all KeyCommandExecutor's.
 func (m *Manager) Simulate(dt float64) {
 	for _, l := range m.keyPressListeners {
-		m.keysMux.RLock()
 		key := m.keys[l.key]
-		m.keysMux.RUnlock()
 
 		if key == off {
 			continue
@@ -99,9 +87,7 @@ func (m *Manager) Simulate(dt float64) {
 				c.Execute(dt)
 			}
 
-			m.keysMux.Lock()
 			m.keys[l.key] = off
-			m.keysMux.Unlock()
 		}
 
 		if l.state == Release && key == release {
@@ -109,27 +95,19 @@ func (m *Manager) Simulate(dt float64) {
 				c.Execute(dt)
 			}
 
-			m.keysMux.Lock()
 			m.keys[l.key] = off
-			m.keysMux.Unlock()
 		}
 	}
 }
 
-func (m *Manager) listen() {
-	for evt := range m.keyEvents {
-		if e, ok := evt.(KeyEvent); ok {
-			if e.Action == KeyPressed {
-				m.keysMux.Lock()
-				m.keys[e.Key] = press
-				m.keysMux.Unlock()
-			}
+func (m *Manager) keyCallback(_ event.Topic, msg interface{}) {
+	if msg, ok := msg.(KeyEvent); ok {
+		if msg.Action == KeyPressed {
+			m.keys[msg.Key] = press
+		}
 
-			if e.Action == KeyReleased {
-				m.keysMux.Lock()
-				m.keys[e.Key] = release
-				m.keysMux.Unlock()
-			}
+		if msg.Action == KeyReleased {
+			m.keys[msg.Key] = release
 		}
 	}
 }

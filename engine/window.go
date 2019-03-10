@@ -3,8 +3,6 @@ package engine
 import (
 	"runtime"
 
-	"github.com/nickbryan/voxel/event"
-
 	"github.com/nickbryan/voxel/input"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
@@ -55,9 +53,8 @@ type WindowManager interface {
 }
 
 // glfwWindowManager wraps the shared glfwWindow functionality.
-// TODO: should this be private?
 type glfwWindowManager struct {
-	publisher event.Publisher
+	publisher Publisher
 }
 
 // Initialise initialises GLFW and sets appropriate window hints.

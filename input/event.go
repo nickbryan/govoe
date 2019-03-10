@@ -3,9 +3,16 @@ package input
 import "github.com/nickbryan/voxel/event"
 
 const (
-	KeyPressedEvent  = event.Topic("win.KeyPressed")
-	KeyReleasedEvent = event.Topic("win.KeyReleased")
+	KeyPressedEvent  = "win.KeyPressed"
+	KeyReleasedEvent = "win.KeyReleased"
 )
+
+// Subscriber is the interface that wraps the Subscribe method.
+//
+// Subscribe subscribed the specified callback to the specified topics.
+type Subscriber interface {
+	Subscribe(cb event.Callback, topics ...event.Topic) int
+}
 
 // KeyEvent encapsulates the relevant information for a keyboard event. It should be dispatched when a WindowManager
 // detects a keyboard event.

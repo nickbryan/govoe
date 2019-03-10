@@ -5,64 +5,127 @@ import (
 )
 
 func TestSubscribe(t *testing.T) {
-	em := NewManager(2)
-	defer em.Teardown()
+	em := NewManager()
 
-	ch1 := em.Subscribe("t1")
-	ch2 := em.Subscribe("t1", "t2")
+	cb1 := false
+	em.Subscribe(func(tp Topic, msg interface{}) {
+		cb1 = true
+		if msg.(string) != "m1" {
+			t.Errorf("Subscription to t1 was called with incorrect message: expected m1, but received: %v", msg.(string))
+		}
+	}, "t1")
+
+	var msgs1 []string
+	em.Subscribe(func(tp Topic, msg interface{}) {
+		msgs1 = append(msgs1, msg.(string))
+	}, "t1", "t2")
+
+	var msgs2 []string
+	em.Subscribe(func(tp Topic, msg interface{}) {
+		msgs2 = append(msgs2, msg.(string))
+	}, "t3")
 
 	em.Publish("m1", "t1")
-	em.Publish("m2", "t1", "t2")
+	em.Publish("m2", "t2")
+	em.Publish("m3", "t2", "t3")
 
-	if v := <-ch1; v != "m1" {
-		t.Errorf("Ch1.1 incorrect channel value: expected %v, but received: %v", "m1", v)
+	if cb1 == false {
+		t.Error("cb1 was not called")
 	}
-	if v := <-ch2; v != "m1" {
-		t.Errorf("Ch2.1 incorrect channel value: expected %v, but received: %v", "m1", v)
+
+	if msgs1[0] != "m1" {
+		t.Errorf("Subscription to t1, t2 message 1 incorrect: expected: m1, but received: %v", msgs1[0])
 	}
-	if v := <-ch2; v != "m2" {
-		t.Errorf("Ch2.2 incorrect channel value: expected %v, but received: %v", "m2", v)
+	if msgs1[1] != "m2" {
+		t.Errorf("Subscription to t1, t2 message 2 incorrect: expected: m2, but received: %v", msgs1[1])
 	}
-	if v := <-ch2; v != "m2" {
-		t.Errorf("Ch2.3 incorrect channel value: expected %v, but received: %v", "m2", v)
+	if msgs1[2] != "m3" {
+		t.Errorf("Subscription to t1, t2 message 3 incorrect: expected: m3, but received: %v", msgs1[2])
+	}
+
+	if msgs2[0] != "m3" {
+		t.Errorf("Subscription to t2, t3 message 1 incorrect: expected: m3, but received: %v", msgs2[0])
 	}
 }
 
 func TestUnsubscribe(t *testing.T) {
-	em := NewManager(3)
-	defer em.Teardown()
+	em := NewManager()
 
-	ch1 := em.Subscribe("t1", "t2")
-	ch2 := em.Subscribe("t1", "t2")
+	{
+		s1 := em.Subscribe(func(tp Topic, msg interface{}) {
+		}, "t1")
 
-	em.Publish("m1", "t1")
-	if v := <-ch1; v != "m1" {
-		t.Errorf("Ch1.1 incorrect channel value: expected %v, but received: %v", "m1", v)
-	}
-	if v := <-ch2; v != "m1" {
-		t.Errorf("Ch2.1 incorrect channel value: expected %v, but received: %v", "m1", v)
+		s2 := em.Subscribe(func(tp Topic, msg interface{}) {
+		}, "t1")
+
+		em.Unsubscribe(s1, "t1")
+
+		s3 := em.Subscribe(func(tp Topic, msg interface{}) {
+		}, "t1")
+
+		if s1 != 0 {
+			t.Errorf("s1 id is expected to be 0: received: %v", s1)
+		}
+
+		if s2 != 1 {
+			t.Errorf("s1 id is expected to be 1: received: %v", s2)
+		}
+
+		if s3 != 0 {
+			t.Errorf("s1 id is expected to be 0: received: %v", s3)
+		}
 	}
 
-	em.Unsubscribe(ch1, "t1")
-	em.Publish("m2", "t1", "t2")
-	if v := <-ch1; v != "m2" {
-		t.Errorf("Ch1.2 incorrect channel value: expected %v, but received: %v", "m2", v)
-	}
-	if v := <-ch2; v != "m2" {
-		t.Errorf("C2.2 incorrect channel value: expected %v, but received: %v", "m2", v)
-	}
-	if v := <-ch2; v != "m2" {
-		t.Errorf("C2.3 incorrect channel value: expected %v, but received: %v", "m2", v)
+	{
+		var msgs1 []string
+		s1 := em.Subscribe(func(tp Topic, msg interface{}) {
+			msgs1 = append(msgs1, msg.(string))
+		}, "t1")
+
+		var msgs2 []string
+		em.Subscribe(func(tp Topic, msg interface{}) {
+			msgs2 = append(msgs2, msg.(string))
+		}, "t1")
+
+		em.Publish("m1", "t1")
+		em.Unsubscribe(s1, "t1")
+		em.Publish("m2", "t1")
+
+		if len(msgs1) != 1 {
+			t.Error("s1 received more messages than expected.")
+		}
+		if msgs1[0] != "m1" {
+			t.Errorf("Subscription to t1 message 1 incorrect: expected: m1, but received: %v", msgs1[0])
+		}
+		if msgs2[0] != "m1" {
+			t.Errorf("Subscription to t1.2 message 1 incorrect: expected: m1, but received: %v", msgs2[0])
+		}
+		if msgs2[1] != "m2" {
+			t.Errorf("Subscription to t1.2 message 2 incorrect: expected: m2, but received: %v", msgs2[1])
+		}
 	}
 
-	em.Unsubscribe(ch1, "t2")
-	em.Unsubscribe(ch2, "t1", "t2")
-	em.Publish("m3", "t1", "t2")
+	{
+		var msgs1 []string
+		s1 := em.Subscribe(func(tp Topic, msg interface{}) {
+			msgs1 = append(msgs1, msg.(string))
+		}, "t1", "t2")
 
-	if _, ok := <-ch1; ok {
-		t.Fatalf("Ch1.3 channel is still receiving values and should have been closed.")
-	}
-	if _, ok := <-ch2; ok {
-		t.Fatalf("Ch2.4 channel is still receiving values and should have been closed.")
+		em.Publish("m1", "t1", "t2")
+		em.Unsubscribe(s1, "t1")
+		em.Publish("m2", "t1", "t2")
+
+		if len(msgs1) != 3 {
+			t.Error("s1 received more messages than expected.")
+		}
+		if msgs1[0] != "m1" {
+			t.Errorf("Subscription to t1, t2 message 1 incorrect: expected: m1, but received: %v", msgs1[0])
+		}
+		if msgs1[1] != "m1" {
+			t.Errorf("Subscription to t1, t2 message 2 incorrect: expected: m1, but received: %v", msgs1[1])
+		}
+		if msgs1[2] != "m2" {
+			t.Errorf("Subscription to t1 message 3 incorrect: expected: m2, but received: %v", msgs1[2])
+		}
 	}
 }
