@@ -11,6 +11,8 @@ const (
 	Pressed
 )
 
+// keyPressListener encapsulates information relating to a registered key within the input manager. The Manager
+// uses this information to determine if the commands should be executed within the current simulation.
 type keyPressListener struct {
 	key      Key
 	state    State

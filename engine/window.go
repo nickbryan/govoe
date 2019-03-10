@@ -20,22 +20,22 @@ type Window interface {
 	ShouldClose() bool
 }
 
-// GLFWWindow wraps the GLFWwindow functionality to satisfy the Window interface.
-type GLFWWindow struct {
+// glfwWindow wraps the GLFWwindow functionality to satisfy the Window interface.
+type glfwWindow struct {
 	win *glfw.Window
 }
 
 // SwapBuffers swaps the front and back buffers of the specified window when rendering with OpenGL.
 // If the swap interval is greater than zero, the GPU driver waits the specified number of screen
 // updates before swapping the buffers.
-func (w *GLFWWindow) SwapBuffers() {
+func (w *glfwWindow) SwapBuffers() {
 	mainthread.Call(func() {
 		w.win.SwapBuffers()
 	})
 }
 
 // ShouldClose returns the value of the close flag of the specified window.
-func (w *GLFWWindow) ShouldClose() bool {
+func (w *glfwWindow) ShouldClose() bool {
 	var shouldClose bool
 
 	mainthread.Call(func() {
@@ -49,19 +49,19 @@ func (w *GLFWWindow) ShouldClose() bool {
 type WindowManager interface {
 	Initialise() error
 	Teardown()
-	CreateWindow(width, height int, title string) (*GLFWWindow, error)
+	CreateWindow(width, height int, title string) (*glfwWindow, error)
 	PollEvents()
 	SetSwapInterval(interval int)
 }
 
-// GLFWWindowManager wraps the shared GLFWWindow functionality.
+// glfwWindowManager wraps the shared glfwWindow functionality.
 // TODO: should this be private?
-type GLFWWindowManager struct {
+type glfwWindowManager struct {
 	publisher event.Publisher
 }
 
 // Initialise initialises GLFW and sets appropriate window hints.
-func (wm *GLFWWindowManager) Initialise() error {
+func (wm *glfwWindowManager) Initialise() error {
 	return mainthread.CallErr(func() error {
 		if err := glfw.Init(); err != nil {
 			return err
@@ -84,18 +84,18 @@ func (wm *GLFWWindowManager) Initialise() error {
 // Teardown will destroy any remaining window, monitor and cursor objects,
 // restore any modified gamma ramps, re-enable the screensaver if it had
 // been disabled and free any other resources allocated by GLFW.
-func (wm *GLFWWindowManager) Teardown() {
+func (wm *glfwWindowManager) Teardown() {
 	mainthread.Call(func() {
 		glfw.Terminate()
 	})
 }
 
 // CreateWindow creates a window, its associated OpenGL context and initialises the GLFW callbacks.
-func (wm *GLFWWindowManager) CreateWindow(width, height int, title string) (*GLFWWindow, error) {
+func (wm *glfwWindowManager) CreateWindow(width, height int, title string) (*glfwWindow, error) {
 	var (
 		err     error
 		glfwWin *glfw.Window
-		win     *GLFWWindow
+		win     *glfwWindow
 	)
 
 	mainthread.Call(func() {
@@ -104,7 +104,7 @@ func (wm *GLFWWindowManager) CreateWindow(width, height int, title string) (*GLF
 			return
 		}
 
-		win = &GLFWWindow{
+		win = &glfwWindow{
 			win: glfwWin,
 		}
 
@@ -147,7 +147,7 @@ func (wm *GLFWWindowManager) CreateWindow(width, height int, title string) (*GLF
 // PollEvents processes only those events that are already in the event
 // queue and then returns immediately. Processing events will cause the
 // window and input callbacks associated with those events to be called.
-func (wm *GLFWWindowManager) PollEvents() {
+func (wm *glfwWindowManager) PollEvents() {
 	mainthread.Call(func() {
 		glfw.PollEvents()
 	})
@@ -156,7 +156,7 @@ func (wm *GLFWWindowManager) PollEvents() {
 // SetSwapInterval sets the swap interval for the current OpenGL context
 // i.e. the number of screen updates to wait from the time glfwSwapBuffers
 // was called before swapping the buffers and returning.
-func (wm *GLFWWindowManager) SetSwapInterval(interval int) {
+func (wm *glfwWindowManager) SetSwapInterval(interval int) {
 	mainthread.Call(func() {
 		glfw.SwapInterval(interval)
 	})

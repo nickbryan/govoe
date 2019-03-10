@@ -54,7 +54,7 @@ func New(c *Configuration) (*Engine, error) {
 	}
 
 	if c.WindowManager == nil {
-		c.WindowManager = &GLFWWindowManager{
+		c.WindowManager = &glfwWindowManager{
 			publisher: c.EventManager,
 		}
 	}
