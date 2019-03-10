@@ -1,5 +1,6 @@
 package input
 
+// State represents the current state of a key within the input system.
 type State int
 
 const (
