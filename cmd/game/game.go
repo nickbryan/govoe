@@ -39,15 +39,15 @@ func main() {
 		}
 
 		inputMgr := input.New(e.World.EventManager)
-		inputMgr.AddKeyCommands(input.KeyW, input.Press, input.KeyCommandExecutorFunc(func() {
+		inputMgr.AddKeyCommands(input.KeyW, input.Press, input.KeyCommandExecutorFunc(func(_ float64) {
 			fmt.Println("W Press")
 		}))
 
-		inputMgr.AddKeyCommands(input.KeyW, input.Release, input.KeyCommandExecutorFunc(func() {
+		inputMgr.AddKeyCommands(input.KeyW, input.Release, input.KeyCommandExecutorFunc(func(_ float64) {
 			fmt.Println("W Release")
 		}))
 
-		inputMgr.AddKeyCommands(input.KeyS, input.Pressed, input.KeyCommandExecutorFunc(func() {
+		inputMgr.AddKeyCommands(input.KeyS, input.Pressed, input.KeyCommandExecutorFunc(func(_ float64) {
 			fmt.Println(".")
 		}))
 
