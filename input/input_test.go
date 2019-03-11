@@ -33,7 +33,7 @@ func TestSimulate(t *testing.T) {
 		msgs = append(msgs, fmt.Sprintf("KeyB Pressed %v", dt))
 	}))
 
-	s.cb(KeyPressedEvent, KeyEvent{
+	s.cb(KeyPressedEvent, KeyEventMessage{
 		Action: KeyPressed,
 		Key:    KeyA,
 	})
@@ -43,7 +43,7 @@ func TestSimulate(t *testing.T) {
 		t.Errorf("Simulation1 expected message to be: KeyA Press 1, received: %v", msgs[0])
 	}
 
-	s.cb(KeyReleasedEvent, KeyEvent{
+	s.cb(KeyReleasedEvent, KeyEventMessage{
 		Action: KeyReleased,
 		Key:    KeyA,
 	})
@@ -52,7 +52,7 @@ func TestSimulate(t *testing.T) {
 		t.Errorf("Simulation2 expected message to be: KeyA Release 1, received: %v", msgs[1])
 	}
 
-	s.cb(KeyPressedEvent, KeyEvent{
+	s.cb(KeyPressedEvent, KeyEventMessage{
 		Action: KeyPressed,
 		Key:    KeyB,
 	})
@@ -66,7 +66,7 @@ func TestSimulate(t *testing.T) {
 		t.Errorf("Simulation4 expected message to be:KeyB Pressed 1, received: %v", msgs[3])
 	}
 
-	s.cb(KeyReleasedEvent, KeyEvent{
+	s.cb(KeyReleasedEvent, KeyEventMessage{
 		Action: KeyReleased,
 		Key:    KeyB,
 	})

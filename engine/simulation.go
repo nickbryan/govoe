@@ -1,34 +1,39 @@
 package engine
 
-import (
-	"fmt"
-)
+// SimulationSecondElapsedEvent will be published when a seconds worth of simulations have passed.
+const SimulationSecondElapsedEvent = "simulation.second_elapsed"
+
+// SimulationSecondElapsedMessage will be published on the SimulationSecondElapsedEvent topic. It contains information
+// about the previous seconds worth of simulations.
+type SimulationSecondElapsedMessage struct {
+	Fps int
+	Sps int
+}
 
 // SimulationStepper is responsible for handling a single step within the game simulation.
 type SimulationStepper interface {
 	Step(e *Engine)
 }
 
-// fixedStepSimulation
+// fixedStepSimulation allows world rendering to happen as fast as possible (when vSync is disabled) but limits the
+// number of simulations to the specified limit (sps).
 type fixedStepSimulation struct {
-	initialised                                          bool
-	previousTime, dt, accumulator, frameTime, frameStart float64
-	updates, frames, ups                                 int
+	initialised                         bool
+	previousTime, frameTime, frameStart float64
+	dt, accumulator                     float64
+	sps, simulations, frames            int
 }
 
-func (sm *fixedStepSimulation) initialise(currentTime float64) {
-	sm.ups = 20
-	sm.dt = 1 / float64(sm.ups)
-	sm.frameStart = currentTime
-
-	sm.initialised = true
-}
-
+// Step moves the simulation forward by one frame. If the simulation is running behind then multiple simulation frames
+// may occur before rendering and ending the step.
 func (sm *fixedStepSimulation) Step(e *Engine) {
 	currentTime := e.GetTime()
 
 	if !sm.initialised {
-		sm.initialise(currentTime)
+		sm.dt = 1 / float64(sm.sps)
+		sm.frameStart = currentTime
+
+		sm.initialised = true
 	}
 
 	sm.frameTime = currentTime - sm.frameStart
@@ -44,7 +49,7 @@ func (sm *fixedStepSimulation) Step(e *Engine) {
 		e.World.Simulate(sm.dt)
 
 		sm.accumulator -= sm.dt
-		sm.updates++
+		sm.simulations++
 	}
 
 	alpha := sm.accumulator / sm.dt
@@ -54,10 +59,12 @@ func (sm *fixedStepSimulation) Step(e *Engine) {
 	e.win.SwapBuffers()
 
 	if currentTime-sm.previousTime >= 1 {
-		// TODO: event
-		fmt.Printf("fps: %d ups: %d \n", sm.frames, sm.updates)
+		e.World.EventManager.Publish(
+			SimulationSecondElapsedMessage{Fps: sm.frames, Sps: sm.simulations},
+			SimulationSecondElapsedEvent,
+		)
 
-		sm.updates = 0
+		sm.simulations = 0
 		sm.frames = 0
 		sm.previousTime = currentTime
 	}

@@ -43,8 +43,7 @@ type EventManager interface {
 type Configuration struct {
 	Title             string            // Title is the window title.
 	Width, Height     int               // Width and Height will determine the initial dimensions of the window when not in fullscreen mode.
-	Fps               int               // Fps is the desired frames per second. // TODO: is this needed and should it be merged with UPS? or do we just need Ups?
-	Ups               int               // Ups is the desired updates per second.
+	Sps               int               // Sps is how many simulations should be run per second.
 	WindowManager     WindowManager     // WindowManager will be used to create the Window instance.
 	EventManager      EventManager      // EventManager will be used by the engine to communicate between system.
 	SimulationStepper SimulationStepper // SimulationStepper will be in charge of handling each step of the game simulation.
@@ -75,7 +74,9 @@ func New(c *Configuration) (*Engine, error) {
 	}
 
 	if c.SimulationStepper == nil {
-		c.SimulationStepper = &fixedStepSimulation{}
+		c.SimulationStepper = &fixedStepSimulation{
+			sps: c.Sps,
+		}
 	}
 
 	if c.EventManager == nil {
@@ -129,6 +130,7 @@ func (e *Engine) Run() {
 
 }
 
+// GetTime returns the time elapsed since the engine was initialised in seconds.
 func (e *Engine) GetTime() float64 {
 	return time.Since(e.started).Seconds()
 }

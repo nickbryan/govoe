@@ -25,7 +25,7 @@ type glfwWindow struct {
 
 // SwapBuffers swaps the front and back buffers of the specified window when rendering with OpenGL.
 // If the swap interval is greater than zero, the GPU driver waits the specified number of screen
-// updates before swapping the buffers.
+// simulations before swapping the buffers.
 func (w *glfwWindow) SwapBuffers() {
 	mainthread.Call(func() {
 		w.win.SwapBuffers()
@@ -115,7 +115,7 @@ func (wm *glfwWindowManager) CreateWindow(width, height int, title string) (*glf
 		win.win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, mod glfw.ModifierKey) {
 			if action == glfw.Press {
 				wm.publisher.Publish(
-					input.KeyEvent{
+					input.KeyEventMessage{
 						Action:   input.KeyPressed,
 						Key:      input.Key(key),
 						Modifier: input.ModifierKey(mod),
@@ -126,7 +126,7 @@ func (wm *glfwWindowManager) CreateWindow(width, height int, title string) (*glf
 
 			if action == glfw.Release {
 				wm.publisher.Publish(
-					input.KeyEvent{
+					input.KeyEventMessage{
 						Action:   input.KeyReleased,
 						Key:      input.Key(key),
 						Modifier: input.ModifierKey(mod),
@@ -151,7 +151,7 @@ func (wm *glfwWindowManager) PollEvents() {
 }
 
 // SetSwapInterval sets the swap interval for the current OpenGL context
-// i.e. the number of screen updates to wait from the time glfwSwapBuffers
+// i.e. the number of screen simulations to wait from the time glfwSwapBuffers
 // was called before swapping the buffers and returning.
 func (wm *glfwWindowManager) SetSwapInterval(interval int) {
 	mainthread.Call(func() {

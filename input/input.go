@@ -13,7 +13,7 @@ const (
 // Manager is responsible for executing all input commands registered within the system.
 //
 // Manager will subscribe to the KeyPressedEvent and KeyReleasedEvent topics of the supplied event.AsyncSubscriber
-// upon initialisation. When the Manager is notified of a KeyEvent it will call the KeyCommandExecutor registered
+// upon initialisation. When the Manager is notified of a KeyEventMessage it will call the KeyCommandExecutor registered
 // with the specified key and action.
 //
 // All KeyCommandExecutor's are called within the Simulate method to ensure that they only get called once per simulation.
@@ -101,7 +101,7 @@ func (m *Manager) Simulate(dt float64) {
 }
 
 func (m *Manager) keyCallback(_ event.Topic, msg interface{}) {
-	if msg, ok := msg.(KeyEvent); ok {
+	if msg, ok := msg.(KeyEventMessage); ok {
 		if msg.Action == KeyPressed {
 			m.keys[msg.Key] = press
 		}

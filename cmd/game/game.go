@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/nickbryan/voxel/event"
+
 	"github.com/nickbryan/voxel/input"
 
 	"github.com/faiface/mainthread"
@@ -16,8 +18,7 @@ func main() {
 			Title:  "Engine Demo",
 			Width:  1440,
 			Height: 900,
-			Fps:    60,
-			Ups:    20,
+			Sps:    20,
 		})
 
 		if err != nil {
@@ -38,6 +39,12 @@ func main() {
 		}))
 
 		e.World.AddSimulator(inputMgr)
+
+		e.World.EventManager.Subscribe(func(_ event.Topic, msg interface{}) {
+			if m, ok := msg.(engine.SimulationSecondElapsedMessage); ok {
+				fmt.Println(fmt.Sprintf("FPS: %v, SPS: %v", m.Fps, m.Sps))
+			}
+		}, engine.SimulationSecondElapsedEvent)
 
 		e.Run()
 	})
