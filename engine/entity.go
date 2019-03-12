@@ -6,7 +6,12 @@ package engine
 // that are associated with it. Instead, an Entity should be registered with a component manager and it should be
 // up to that component manager to keep track of the data relevant to the Entity within that system.
 type Entity struct {
-	Id uint64
+	id uint64 // Encapsulate the id so an Entity can not be created by the user; it must come from the EntityManager to be useful.
+}
+
+// Id returns the unique identifier for the Entity.
+func (e *Entity) Id() uint64 {
+	return e.id
 }
 
 // EntityManager is responsible for the creation and destruction of Entities within the engine. All Entities should
@@ -25,29 +30,29 @@ func NewEnitytManager() *EntityManager {
 // Create will iterate over the existing Entities until it finds a slot in which an entity does not exist. It will
 // then add the Entity to the entities list and return the newly created Entity.
 //
-// Entity Ids start at 1.
+// Entity Ids start at 1 and should never be 0. If the Id is 0 then the Entity did not come from the EntityManager.
 //
 // Managing Entities this way allows us to ensure that there are no gaps in our Entity Id's and keeps our map sequentially
 // stored in memory.
 func (em *EntityManager) Create() *Entity {
-	e := &Entity{Id: 1}
+	e := &Entity{id: 1}
 
 	for em.Alive(e) {
-		e.Id++
+		e.id++
 	}
 
-	em.entities[e.Id] = e
+	em.entities[e.id] = e
 
 	return e
 }
 
 // Alive will check to see if there is an Entity mapped with the given Entities Id within the EntityManager.
 func (em *EntityManager) Alive(e *Entity) bool {
-	_, ok := em.entities[e.Id]
+	_, ok := em.entities[e.id]
 	return ok
 }
 
 // Destroy will remove the given Entity from the EntityManager.
 func (em *EntityManager) Destroy(e *Entity) {
-	delete(em.entities, e.Id)
+	delete(em.entities, e.id)
 }
