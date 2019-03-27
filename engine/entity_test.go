@@ -9,21 +9,21 @@ func TestCreate(t *testing.T) {
 	e2 := em.Create()
 	e3 := em.Create()
 
-	if e1.Id != 1 {
+	if e1.Id() != 1 {
 		t.Errorf("Entity1 Id expected to be 1, but received: %v", e1.Id)
 	}
 
-	if e2.Id != 2 {
+	if e2.Id() != 2 {
 		t.Errorf("Entity2 Id expected to be 2, but received: %v", e2.Id)
 	}
 
-	if e3.Id != 3 {
+	if e3.Id() != 3 {
 		t.Errorf("Entity3 Id expected to be 3, but received: %v", e3.Id)
 	}
 
 	em.Destroy(e2)
 	e4 := em.Create()
-	if e4.Id != 2 {
+	if e4.Id() != 2 {
 		t.Errorf("Entity4 expected to have filled slot 2 with Id expected to be 2, but received Id: %v", e4.Id)
 	}
 }
@@ -33,7 +33,7 @@ func TestAlive(t *testing.T) {
 
 	e1 := em.Create()
 	e2 := em.Create()
-	e3 := &Entity{Id: 3}
+	e3 := &Entity{id: 3}
 
 	if em.Alive(e1) == false {
 		t.Error("Entity1 was expected to be alive but alive returned false")
